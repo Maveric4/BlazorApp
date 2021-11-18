@@ -1,0 +1,71 @@
+﻿@page "/yt/download"
+
+@using BlazorApp1.Models
+@using BlazorApp1.Services
+@inject YtDownloaderService YtDownloaderSrvc
+
+<h2>YtDownloader</h2>
+
+<h4 class="InputStyle">Download new video</h4>
+<div class="InputStyle">
+    <EditForm Model="@video" OnValidSubmit="@DownloadVideo">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div style="display: block;">
+            <p style="display:inline; margin: 10px">URL</p>
+            <InputText id="url" @bind-Value="video.Url" @oninput="DownloadInfo" />
+        </div>
+
+        <div style="display: block;">
+            <p style="display:inline; margin: 10px">Resolution</p>
+            <InputSelect id="resolutionSelect" @bind-Value="video.ResolutionChosen" style="min-width: 75px; display: inline; margin: 10px">
+                @foreach (var res in video.Resolution.OrderByDescending(x => x))
+                {
+                    <option value=@res>@res</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div style="display: block;">
+            <p style="display: inline; margin: 10px">Bitrate</p>
+            <InputSelect id="bitrateSelect" @bind-Value="video.BitRateChosen" style="min-width: 75px; display: inline; margin: 10px">
+                @foreach (var bitrate in video.BitRate.OrderByDescending(x => x))
+                {
+                    <option value=@bitrate>@bitrate</option>
+                }
+            </InputSelect>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </EditForm>
+</div>
+
+
+@code {
+    private VideoInfoOwn video = new VideoInfoOwn();
+
+
+    private void DownloadInfo()
+    {
+        var ytVideo = new YtDownloaderService(video.Url);
+        video.Resolution = ytVideo.Resolution;
+        video.BitRate = ytVideo.BitRate;
+        video.BitRateChosen = ytVideo.BitRate.First();
+        video.ResolutionChosen = ytVideo.Resolution.First();
+
+    }
+
+    private void ChooseResolution()
+    {
+
+    }
+
+    private async void DownloadVideo()
+    {
+        var ytVideo = new YtDownloaderService(video.Url);
+        await ytVideo.DownloadVideo(video);
+    }
+
+
+}
