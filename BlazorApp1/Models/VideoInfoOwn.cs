@@ -10,5 +10,8 @@ namespace BlazorApp1.Models
         public int ResolutionChosen { get; set; }
         public int BitRateChosen { get; set; }
         public float Progress { get; set; }
+        public long DownloadedBytes { get; set; }
+        public long TotalBytes { get; set; }
+        public bool Status { get; set; }
     }
 }

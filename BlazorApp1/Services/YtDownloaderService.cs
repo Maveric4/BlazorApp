@@ -83,7 +83,7 @@ namespace BlazorApp1.Services
                     using (var input = await client.GetStreamAsync(vid.Uri))
                     {
                         //byte[] buffer = new byte[16 * 1024];
-                        byte[] buffer = new byte[1024 * 1024];
+                        byte[] buffer = new byte[256 * 1024 * 1024];
                         int read;
                         int totalRead = 0;
 
@@ -93,7 +93,7 @@ namespace BlazorApp1.Services
                             totalRead += read;
                             collctedbytes += read;
                             long x = collctedbytes * 100 / totalbytes;
-                            ChangeProgressBar(x);
+                            ChangeProgressBar(collctedbytes, totalbytes);
                             Console.WriteLine(x);
                             //Dataprogress.Text = ByteConverter(collctedbytes) + "/" + ByteConverter(totalbytes);
                             //progressBar1.Invoke((MethodInvoker)(() => progressBar1.Value = (int)x));

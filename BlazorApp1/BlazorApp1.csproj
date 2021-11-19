@@ -5,6 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Audio.mp3" />
+    <None Remove="Audio.mp4" />
+    <None Remove="Video.mp4" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FFMpegCore" Version="4.6.0" />
     <PackageReference Include="VideoLibrary" Version="3.1.4" />
     <PackageReference Include="Xabe.FFmpeg" Version="5.0.2" />

@@ -15,7 +15,7 @@
 
         <div style="display: block;">
             <p style="display:inline; margin: 10px">URL</p>
-            <InputText id="url" @bind-Value="video.Url" @oninput="DownloadInfo" />
+            <InputText id="url" @bind-Value="video.Url" @oninput="DownloadInfo" style="width: 700px"/>
         </div>
 
         <div style="display: block;">
@@ -39,19 +39,43 @@
         </div>
 
         <div style="display: block;">
-            <p style="display: inline; margin: 10px">Progress</p>
-            <p style="display: inline; margin: 10px">@(video.Progress)%</p>
+            <p style="display: inline; margin: 20px 10px">Progress</p>
+            <progress id="downloadingProgressBar" value=@video.Progress max=100 style="display: inline;"></progress> 
+            @if (video.TotalBytes < Math.Pow(2, 10))
+            {
+                <p style="display: inline; margin: 20px 10px">@(video.Progress)% (@video.DownloadedBytes KB | @video.TotalBytes KB)</p>
+            }
+            else
+            {
+                <p style="display: inline; margin: 20px 10px">@(video.Progress)% (@(video.DownloadedBytes/1024) MB | @(video.TotalBytes/1024) MB)</p>
+            }
         </div>
 
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <div style="display: block;">
+            <p style="display: inline; margin: 20px 10px">Status</p>
+
+            @if (@video.Status)
+            {
+                <p style="display: inline; margin: 20px 10px">Downloaded </p>
+            }
+            else
+            {
+                <p style="display: inline; margin: 20px 10px">Not downloaded </p>
+            }
+        </div>
+        <div style="display: block;">
+            <button type="submit" class="btn btn-primary" style="display: inline; margin: 20px 10px">Submit</button>
+        </div>
+
     </EditForm>
 </div>
 
 
 @code {
     private VideoInfoOwn video = new VideoInfoOwn();
+    //private readonly object _locker = new object();
 
-    public delegate void DelegateChangeProgressBar(float workDone);
+    public delegate void DelegateChangeProgressBar(long downloadedBytes, long totalBytes);
 
     private void DownloadInfo()
     {
@@ -62,17 +86,35 @@
         video.ResolutionChosen = ytVideo.Resolution.First();
     }
 
-    public void ChangeProgressBar(float workDone)
+    public void ChangeProgressBar(long downloadedBytes, long totalBytes)
     {
+        float workDone = (int)(100 * Math.Round(((float)downloadedBytes / (float)totalBytes), 2));
         video.Progress = workDone;
-        InvokeAsync(() => StateHasChanged());
+        video.DownloadedBytes = downloadedBytes / 1024;
+        video.TotalBytes = totalBytes / 1024;
+        RefreshLayout();
     }
 
-    private async void DownloadVideo()
+    private async void DownloadVideo2()
     {
+        video.Status = false;
         var ytVideo = new YtDownloaderService(video.Url);
         DelegateChangeProgressBar handler = ChangeProgressBar;
         await ytVideo.DownloadVideo(video, handler);
+        video.Status = true;
+        RefreshLayout();
+    }
+
+    private void DownloadVideo()
+    {
+        var tt = new Thread(DownloadVideo2);
+        tt.IsBackground = false;
+        tt.Start();
+    }
+
+    private void RefreshLayout()
+    {
+        InvokeAsync(() => StateHasChanged());
     }
 
 
