@@ -3,6 +3,7 @@
 @using BlazorApp1.Models
 @using BlazorApp1.Services
 @inject YtDownloaderService YtDownloaderSrvc
+@using System.Threading;
 
 <h2>YtDownloader</h2>
 
@@ -37,6 +38,11 @@
             </InputSelect>
         </div>
 
+        <div style="display: block;">
+            <p style="display: inline; margin: 10px">Progress</p>
+            <p style="display: inline; margin: 10px">@(video.Progress)%</p>
+        </div>
+
         <button type="submit" class="btn btn-primary">Submit</button>
     </EditForm>
 </div>
@@ -45,6 +51,7 @@
 @code {
     private VideoInfoOwn video = new VideoInfoOwn();
 
+    public delegate void DelegateChangeProgressBar(float workDone);
 
     private void DownloadInfo()
     {
@@ -53,18 +60,19 @@
         video.BitRate = ytVideo.BitRate;
         video.BitRateChosen = ytVideo.BitRate.First();
         video.ResolutionChosen = ytVideo.Resolution.First();
-
     }
 
-    private void ChooseResolution()
+    public void ChangeProgressBar(float workDone)
     {
-
+        video.Progress = workDone;
+        InvokeAsync(() => StateHasChanged());
     }
 
     private async void DownloadVideo()
     {
         var ytVideo = new YtDownloaderService(video.Url);
-        await ytVideo.DownloadVideo(video);
+        DelegateChangeProgressBar handler = ChangeProgressBar;
+        await ytVideo.DownloadVideo(video, handler);
     }
 
 

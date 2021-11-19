@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace BlazorApp1.Models
 {
@@ -12,5 +9,6 @@ namespace BlazorApp1.Models
         public List<int> BitRate { get; set; } = new List<int>();
         public int ResolutionChosen { get; set; }
         public int BitRateChosen { get; set; }
+        public float Progress { get; set; }
     }
 }

@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using VideoLibrary;
 using Xabe.FFmpeg.Downloader;
+using static BlazorApp1.Pages.MyPages.YtDownloader;
 
 namespace BlazorApp1.Services
 {
@@ -45,6 +46,7 @@ namespace BlazorApp1.Services
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 _videoVariants = new YouTube().GetAllVideos("https://www.youtube.com/watch?v=SNBOb52uNH0&ab_channel=AzrealCodeLab").ToList();
             }
         }
@@ -58,7 +60,7 @@ namespace BlazorApp1.Services
             return new { resolution, bitRate };
         }
 
-        public async Task DownloadVideo(VideoInfoOwn videoInfo)
+        public async Task DownloadVideo(VideoInfoOwn videoInfo, DelegateChangeProgressBar ChangeProgressBar)
         {
             var totalbytes = 0;
             var collctedbytes = 0;
@@ -80,7 +82,8 @@ namespace BlazorApp1.Services
                     totalbytes += (int)totalByte;
                     using (var input = await client.GetStreamAsync(vid.Uri))
                     {
-                        byte[] buffer = new byte[16 * 1024];
+                        //byte[] buffer = new byte[16 * 1024];
+                        byte[] buffer = new byte[1024 * 1024];
                         int read;
                         int totalRead = 0;
 
@@ -90,6 +93,8 @@ namespace BlazorApp1.Services
                             totalRead += read;
                             collctedbytes += read;
                             long x = collctedbytes * 100 / totalbytes;
+                            ChangeProgressBar(x);
+                            Console.WriteLine(x);
                             //Dataprogress.Text = ByteConverter(collctedbytes) + "/" + ByteConverter(totalbytes);
                             //progressBar1.Invoke((MethodInvoker)(() => progressBar1.Value = (int)x));
                         }
@@ -100,10 +105,6 @@ namespace BlazorApp1.Services
             await FFmpegDownloader.GetLatestVersion(FFmpegVersion.Full);
             async Task DownloadWork(string link, int playlist = -1)
             {
-                //if (playlist < 0)
-                //    Status.Text = "Downloading...";
-                //else
-                //    Status.Text = (playlist + 1).ToString() + "/" + videoId.Count.ToString();
                 var video = YouTube.Default.GetAllVideos(link);
                 var Targetaudio = video.Where(r => r.AdaptiveKind == AdaptiveKind.Audio &&
                 r.AudioBitrate == videoInfo.BitRateChosen).Select(r => r);
@@ -111,184 +112,24 @@ namespace BlazorApp1.Services
                 var TargetVideo = video.Where(r => r.AdaptiveKind == AdaptiveKind.Video &&
                 r.Format == VideoFormat.Mp4 && r.Resolution == videoInfo.ResolutionChosen).Select(r => r);
 
-                //txtTitle.Invoke((MethodInvoker)(() => txtTitle.Text = video.ToList()[0].Title));
                 Task au = SourceDownloader(audiomp4, Targetaudio.ToList()[0]);
-                //if (chkAudioOnly.Checked != true)
-                //{
-                    Task vide = SourceDownloader(VideoFile, TargetVideo.ToList()[0]);
-                    await au;
-                    FFMpeg.ExtractAudio(audiomp4, Audiomp3);
-                    //File.Delete(audiomp4);
-                    await vide;
-                    FFMpeg.ReplaceAudio(VideoFile, Audiomp3, txtFilePath + TargetVideo.ToList()[0].FullName);
-                    //FileDelete(VideoFile);
-                    //FileDelete(Audiomp3);
-                //}
-                //else
-                //{
-                //    await au;
-                //    FFMpeg.ExtractAudio(audiomp4, txtFilePath.Text + TargetVideo.ToList()[0].Title + "mp3");
-                //    FileDelete(audiomp4);
-                //}
-                //if (playlist < 0)
-                //    Status.Text = "Completed";
-                //else
-                //    Status.Text = "Done (" + (playlist + 1).ToString() + "/" + videoId.Count.ToString() + ")";
-                //Dataprogress.Text = "";
+
+                Task vide = SourceDownloader(VideoFile, TargetVideo.ToList()[0]);
+                await au;
+                FFMpeg.ExtractAudio(audiomp4, Audiomp3);
+                //File.Delete(audiomp4);
+                await vide;
+                FFMpeg.ReplaceAudio(VideoFile, Audiomp3, txtFilePath + TargetVideo.ToList()[0].FullName);
+                //FileDelete(VideoFile);
+                //FileDelete(Audiomp3);
             }
-            //if (videoId.Count > 0)
-            //{
-            //    for (int i = 0; i < videoId.Count; i++)
-            //    {
-            //        await DownloadWork(watchLink + videoId.ElementAt(i), i);
-            //    }
-            //}
-            //else
-            //{
-                await DownloadWork(videoInfo.Url);
-            //}
+            await DownloadWork(videoInfo.Url);
         }
-
-
 
         private void FileDelete(string pa)
         {
             if (File.Exists(pa))
                 File.Delete(pa);
         }
-
-
-
-
-
-
-
-
-
-
-
-
-        //public void Download(VideoInfoOwn video)
-        //{
-        //    try
-        //    {
-        //        string sURL = "large - webm";
-
-
-
-        //        if (string.IsNullOrEmpty(sURL))
-        //        {
-        //            return;
-        //        }
-
-
-
-        //        NameValueCollection urlParams = HttpUtility.ParseQueryString(sURL);
-
-
-
-        //        string videoTitle = urlParams["title"] + " " + "large - webm";
-        //        string videoFormt = HttpUtility.HtmlDecode(urlParams["type"]);
-        //        videoFormt = videoFormt.Split(';')[0].Split('/')[1];
-
-
-
-        //        string downloadPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        //        string sFilePath = string.Format(Path.Combine(downloadPath, "Downloads\\{0}.{1}"), videoTitle, videoFormt);
-
-
-
-        //        WebClient webClient = new WebClient();
-        //        //webClient.DownloadFileCompleted += new AsyncCompletedEventHandler(Completed);
-        //        webClient.DownloadFileAsync(new Uri(sURL), sFilePath);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        //lblMessage.Text = ex.Message;
-        //        //lblMessage.ForeColor = Color.Red;
-        //        return;
-        //    }
-        //}
-
-        //public void Download2(VideoInfoOwn video)
-        //{
-
-        //    try
-        //    {
-        //        Uri videoUri = new Uri(video.Url);
-        //        string videoID = HttpUtility.ParseQueryString(videoUri.Query).Get("v");
-        //        string videoInfoUrl = "http://www.youtube.com/get_video_info?video_id=" + videoID;
-
-
-
-        //        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(videoInfoUrl);
-        //        HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-
-
-
-        //        Stream responseStream = response.GetResponseStream();
-        //        StreamReader reader = new StreamReader(responseStream, Encoding.GetEncoding("utf-8"));
-
-
-
-        //        string videoInfo = HttpUtility.HtmlDecode(reader.ReadToEnd());
-
-
-
-        //        NameValueCollection videoParams = HttpUtility.ParseQueryString(videoInfo);
-
-
-
-        //        if (videoParams["reason"] != null)
-        //        {
-        //            //lblMessage.Text = videoParams["reason"];
-        //            return;
-        //        }
-
-
-
-        //        string[] videoURLs = videoParams["url_encoded_fmt_stream_map"].Split(',');
-
-
-
-        //        foreach (string vURL in videoURLs)
-        //        {
-        //            string sURL = HttpUtility.HtmlDecode(vURL);
-
-
-
-        //            NameValueCollection urlParams = HttpUtility.ParseQueryString(sURL);
-        //            string videoFormat = HttpUtility.HtmlDecode(urlParams["type"]);
-
-
-
-        //            sURL = HttpUtility.HtmlDecode(urlParams["url"]);
-        //            sURL += "&signature=" + HttpUtility.HtmlDecode(urlParams["sig"]);
-        //            sURL += "&type=" + videoFormat;
-        //            sURL += "&title=" + HttpUtility.HtmlDecode(videoParams["title"]);
-
-
-
-        //            videoFormat = urlParams["quality"] + " - " + videoFormat.Split(';')[0].Split('/')[1];
-
-
-
-        //            //ddlVideoFormats.Items.Add(new ListItem(videoFormat, sURL));
-        //        }
-
-
-
-        //        //btnProcess.Enabled = false;
-        //        //ddlVideoFormats.Visible = true;
-        //        //btnDownload.Visible = true;
-        //        //lblMessage.Text = string.Empty;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        //lblMessage.Text = ex.Message;
-        //        //lblMessage.ForeColor = Color.Red;
-        //        return;
-        //    }
-        ////}   
     }
 }
